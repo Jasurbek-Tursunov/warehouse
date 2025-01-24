@@ -3,10 +3,10 @@ package entity
 import "time"
 
 type Product struct {
-	ID        uint
-	name      string
-	price     float64
-	quantity  int
-	createdAt time.Time
-	updatedAt time.Time
+	ID        int
+	Name      string
+	Price     float64
+	Quantity  int
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
