@@ -1,11 +1,11 @@
-package repository
+package usecase
 
 import (
 	"github.com/Jasurbek-Tursunov/warehouse/internal/domain/entity"
 	"github.com/Jasurbek-Tursunov/warehouse/internal/domain/repository/dto"
 )
 
-type ProductRepository interface {
+type ProductService interface {
 	List(filters dto.ProductQuery, paginate dto.Paginator) ([]entity.Product, error)
 	Create(product dto.CreateProduct) (entity.Product, error)
 	Update(product dto.UpdateProduct) (entity.Product, error)

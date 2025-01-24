@@ -11,3 +11,6 @@ type UpdateProduct struct {
 	Price    uint   `json:"price" validate:"required"`
 	Quantity uint   `json:"quantity" validate:"required"`
 }
+
+type ProductQuery struct {
+}
