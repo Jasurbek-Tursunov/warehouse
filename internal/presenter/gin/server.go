@@ -1,23 +1,27 @@
-package pgin
+package gin
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
+	"github.com/Jasurbek-Tursunov/warehouse/pkg/config"
+	libgin "github.com/gin-gonic/gin"
 	"log/slog"
+	"time"
 )
 
 type Server struct {
-	Port   int
-	router *gin.Engine
-	logger *slog.Logger
+	Port    int
+	Timeout time.Duration
+	router  *libgin.Engine
+	logger  *slog.Logger
 }
 
 func NewServer() *Server {
-	cfg := MustLoadEnvConfig()
+	cfg := config.MustLoad[Config]()
 
 	return &Server{
-		Port:   cfg.Port,
-		router: NewRouter(),
+		Port:    cfg.Port,
+		Timeout: cfg.Timeout,
+		router:  NewRouter(),
 	}
 }
 
