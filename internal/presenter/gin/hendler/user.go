@@ -11,6 +11,10 @@ type AuthHandler struct {
 	service usecase.AuthService
 }
 
+func NewAuthHandler(service usecase.AuthService) *AuthHandler {
+	return &AuthHandler{service: service}
+}
+
 func (a *AuthHandler) Register(c *gin.Context) {
 	var data dto.CreateUser
 	if err := c.BindJSON(&data); err != nil {

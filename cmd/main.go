@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/Jasurbek-Tursunov/warehouse/internal/di"
-	gin "github.com/Jasurbek-Tursunov/warehouse/internal/presenter/gin"
 	"os"
 	"os/signal"
 	"syscall"
@@ -13,12 +12,14 @@ func main() {
 
 	// TODO Setup Log
 
-	server := gin.NewServer()
-	server.MustRun()
-
 	// TODO Run server
 	container := di.NewContainer()
 	defer container.Close()
+
+	container.InitStore()
+	container.InitUserRepo()
+	container.InitAuthService()
+	container.InitServer()
 
 	go func() {
 		container.Server.MustRun()

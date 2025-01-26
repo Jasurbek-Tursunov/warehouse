@@ -14,12 +14,12 @@ func MustLoad[Config any]() *Config {
 		panic("Config must be a struct")
 	}
 
-	configPath := fetchConfigPath()
-	if configPath == "" {
-		return mustLoadEnv[Config]()
-	}
+	//configPath := fetchConfigPath()
+	//if configPath == "" {
+	return mustLoadEnv[Config]()
+	//}
 
-	return mustLoadPath[Config](configPath)
+	//return mustLoadPath[Config](configPath)
 }
 
 func mustLoadPath[Config any](configPath string) *Config {

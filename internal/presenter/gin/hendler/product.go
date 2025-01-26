@@ -9,6 +9,10 @@ type ProductHandler struct {
 	service usecase.ProductService
 }
 
+func NewProductHandler(service usecase.ProductService) *ProductHandler {
+	return &ProductHandler{service: service}
+}
+
 func (p *ProductHandler) List(c *gin.Context)   {}
 func (p *ProductHandler) Create(c *gin.Context) {}
 func (p *ProductHandler) Update(c *gin.Context) {}

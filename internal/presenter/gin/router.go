@@ -1,13 +1,14 @@
 package gin
 
 import (
+	"github.com/Jasurbek-Tursunov/warehouse/internal/domain/usecase"
 	"github.com/Jasurbek-Tursunov/warehouse/internal/presenter/gin/hendler"
 	libgin "github.com/gin-gonic/gin"
 )
 
-func NewRouter() *libgin.Engine {
-	auth := hendler.AuthHandler{}
-	product := hendler.ProductHandler{}
+func NewRouter(authService usecase.AuthService, productService usecase.ProductService) *libgin.Engine {
+	auth := hendler.NewAuthHandler(authService)
+	product := hendler.NewProductHandler(productService)
 
 	router := libgin.Default()
 

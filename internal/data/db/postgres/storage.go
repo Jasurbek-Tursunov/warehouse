@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Jasurbek-Tursunov/warehouse/pkg/config"
+	_ "github.com/lib/pq"
 )
 
 type Storage struct {

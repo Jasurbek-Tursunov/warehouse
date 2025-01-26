@@ -11,17 +11,18 @@ import (
 type Server struct {
 	Port    int
 	Timeout time.Duration
-	router  *libgin.Engine
 	logger  *slog.Logger
+	router  *libgin.Engine
 }
 
-func NewServer() *Server {
+func NewServer(logger *slog.Logger, router *libgin.Engine) *Server {
 	cfg := config.MustLoad[Config]()
 
 	return &Server{
 		Port:    cfg.Port,
 		Timeout: cfg.Timeout,
-		router:  NewRouter(),
+		logger:  logger,
+		router:  router,
 	}
 }
 
@@ -29,6 +30,10 @@ func (s *Server) MustRun() {
 	if err := s.Run(); err != nil {
 		panic(err)
 	}
+}
+
+func (s *Server) GracefulStop() {
+
 }
 
 func (s *Server) Run() error {
