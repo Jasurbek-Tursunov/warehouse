@@ -4,14 +4,16 @@ import (
 	"github.com/Jasurbek-Tursunov/warehouse/internal/domain/entity"
 	"github.com/Jasurbek-Tursunov/warehouse/internal/domain/repository"
 	"github.com/Jasurbek-Tursunov/warehouse/internal/domain/repository/dto"
+	"log/slog"
 )
 
 type ProductServiceImpl struct {
+	logger      *slog.Logger
 	productRepo repository.ProductRepository
 }
 
-func NewProductService(productRepo repository.ProductRepository) *ProductServiceImpl {
-	return &ProductServiceImpl{productRepo: productRepo}
+func NewProductService(logger *slog.Logger, productRepo repository.ProductRepository) *ProductServiceImpl {
+	return &ProductServiceImpl{logger: logger, productRepo: productRepo}
 }
 
 func (p *ProductServiceImpl) List(filters *dto.ProductQuery, paginate *dto.Paginator) ([]entity.Product, error) {

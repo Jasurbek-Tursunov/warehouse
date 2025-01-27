@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/Jasurbek-Tursunov/warehouse/internal/di"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -12,13 +13,17 @@ func main() {
 
 	// TODO Setup Log
 
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+
 	// TODO Run server
-	container := di.NewContainer()
+	container := di.NewContainer(logger)
 	defer container.Close()
 
 	container.InitStore()
 	container.InitUserRepo()
 	container.InitAuthService()
+	container.InitProductRepo()
+	container.InitProductService()
 	container.InitServer()
 
 	go func() {

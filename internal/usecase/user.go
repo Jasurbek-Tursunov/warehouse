@@ -8,23 +8,32 @@ import (
 	"github.com/Jasurbek-Tursunov/warehouse/internal/domain/repository/dto"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
+	"log/slog"
 	"strconv"
 	"time"
 )
 
 type AuthServiceImpl struct {
-	userRepos      repository.UserRepository
+	logger         *slog.Logger
 	secretKey      string
 	expireDuration time.Duration
+
+	userRepos repository.UserRepository
 }
 
-func NewAuthService(userRepos repository.UserRepository) *AuthServiceImpl {
-	return &AuthServiceImpl{userRepos: userRepos}
+func NewAuthService(logger *slog.Logger, userRepos repository.UserRepository) *AuthServiceImpl {
+	return &AuthServiceImpl{
+		logger:         logger,
+		secretKey:      "secret",
+		expireDuration: 24 * time.Hour,
+		userRepos:      userRepos,
+	}
 }
 
 func (a *AuthServiceImpl) Register(username, password string) (*entity.User, error) {
 	hashedPassword, err := hashingPassword(password)
 	if err != nil {
+
 		return nil, err
 	}
 
@@ -44,7 +53,7 @@ func (a *AuthServiceImpl) Register(username, password string) (*entity.User, err
 func (a *AuthServiceImpl) Login(username, password string) (string, error) {
 	user, err := a.userRepos.GetByUsername(username)
 	if err != nil {
-		return "", errors.New("user with this username not found")
+		return "", fmt.Errorf("user with this username not found: %w", err)
 	}
 
 	hashedPassword, err := hashingPassword(password)
@@ -52,11 +61,26 @@ func (a *AuthServiceImpl) Login(username, password string) (string, error) {
 		return "", err
 	}
 
-	if user.Password != hashedPassword {
+	if assertPassword(user.Password, hashedPassword) {
 		return "", errors.New("invalid password")
 	}
 
-	return a.encode(int(user.ID))
+	return encode(user.ID, a.expireDuration, a.secretKey)
+}
+
+func (a *AuthServiceImpl) Check(token string) error {
+	id, err := decode(token, a.secretKey)
+	if err != nil {
+		a.logger.Debug("failed decode token", "error", err.Error())
+		return err
+	}
+
+	_, err = a.userRepos.Get(id)
+	if err != nil {
+		a.logger.Debug("failed to get user", "error", err.Error())
+		return err
+	}
+	return nil
 }
 
 func hashingPassword(password string) (string, error) {
@@ -67,28 +91,32 @@ func hashingPassword(password string) (string, error) {
 	return string(bytes), nil
 }
 
-func (a *AuthServiceImpl) encode(id int) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
-		ID:        strconv.Itoa(id),
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(a.expireDuration)),
-		IssuedAt:  jwt.NewNumericDate(time.Now()),
-	})
-	return token.SignedString([]byte(a.secretKey))
+func assertPassword(password, hashPassword string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(hashPassword), []byte(password)) == nil
 }
 
-func (a *AuthServiceImpl) decode(accessToken string) (int, error) {
-	token, err := jwt.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
+func encode(id int, expireDuration time.Duration, secretKey string) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &jwt.RegisteredClaims{
+		ID:        strconv.Itoa(id),
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(expireDuration)),
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
+	})
+	return token.SignedString([]byte(secretKey))
+}
+
+func decode(accessToken, secretKey string) (int, error) {
+	token, err := jwt.ParseWithClaims(accessToken, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte(a.secretKey), nil
+		return []byte(secretKey), nil
 	})
 
 	if err != nil {
 		return 0, err
 	}
 
-	if claims, ok := token.Claims.(jwt.RegisteredClaims); ok && token.Valid {
+	if claims, ok := token.Claims.(*jwt.RegisteredClaims); ok && token.Valid {
 		return strconv.Atoi(claims.ID)
 	}
 

@@ -25,7 +25,7 @@ func (p *ProductRepositoryImpl) List(filters *dto.ProductQuery, paginate *dto.Pa
 		max(paginate.Page-1, 0) * paginate.PageSize,
 	}
 
-	query := `SELECT id, name, price, quantity, created_at, updated_at FROM product LIMIT $1 OFFSET $2`
+	query := `SELECT id, name, price, quantity, created_at, updated_at FROM products LIMIT $1 OFFSET $2`
 	rows, err := p.store.conn.QueryContext(ctx, query, args...)
 	if err != nil {
 		return []entity.Product{}, err

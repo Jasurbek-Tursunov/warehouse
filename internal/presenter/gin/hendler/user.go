@@ -18,18 +18,31 @@ func NewAuthHandler(service usecase.AuthService) *AuthHandler {
 func (a *AuthHandler) Register(c *gin.Context) {
 	var data dto.CreateUser
 	if err := c.BindJSON(&data); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, err.Error())
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	user, err := a.service.Register(data.Username, data.Password)
 	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, err.Error())
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.IndentedJSON(http.StatusOK, user)
 }
 
 func (a *AuthHandler) Login(c *gin.Context) {
+	var data dto.CreateUser
 
+	if err := c.BindJSON(&data); err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	token, err := a.service.Login(data.Username, data.Password)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"token": token})
 }

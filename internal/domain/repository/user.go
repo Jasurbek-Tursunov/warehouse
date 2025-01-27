@@ -7,5 +7,6 @@ import (
 
 type UserRepository interface {
 	Create(user *dto.CreateUser) (*entity.User, error)
+	Get(id int) (*entity.User, error)
 	GetByUsername(username string) (*entity.User, error)
 }

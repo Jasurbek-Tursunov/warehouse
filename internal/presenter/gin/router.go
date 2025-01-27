@@ -6,24 +6,25 @@ import (
 	libgin "github.com/gin-gonic/gin"
 )
 
-func NewRouter(authService usecase.AuthService, productService usecase.ProductService) *libgin.Engine {
+func (s *Server) Register(authService usecase.AuthService, productService usecase.ProductService) {
+	middleware := NewMiddleware(authService)
+
 	auth := hendler.NewAuthHandler(authService)
 	product := hendler.NewProductHandler(productService)
 
-	router := libgin.Default()
+	s.router = libgin.Default()
+	authorized := s.router.Group("/").Use(middleware.Auth)
 
-	router.GET("/ping", func(c *libgin.Context) {
+	s.router.GET("/ping", func(c *libgin.Context) {
 		c.JSON(200, libgin.H{"client": c.ClientIP(), "server": c.Request.Host})
 	})
 
-	router.POST("/register", auth.Register)
-	router.POST("/login", auth.Login)
+	s.router.POST("/register", auth.Register)
+	s.router.POST("/login", auth.Login)
 
-	router.GET("/products", product.List)
-	router.POST("/products", product.Create)
-	router.GET("/products/{}", product.Get)
-	router.PUT("/products/{}", product.Update)
-	router.DELETE("/products/{}", product.Delete)
-
-	return router
+	authorized.GET("/products", product.List)
+	authorized.POST("/products", product.Create)
+	authorized.GET("/products/:id", product.Get)
+	authorized.PUT("/products/:id", product.Update)
+	authorized.DELETE("/products/:id", product.Delete)
 }

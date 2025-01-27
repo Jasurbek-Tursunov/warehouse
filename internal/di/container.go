@@ -11,15 +11,6 @@ import (
 	"log/slog"
 )
 
-type StorageType int
-
-const (
-	StorageDefault  StorageType = StorageMock
-	StorageMock                 = 0
-	StoragePostgres             = 1
-	StorageMySQL                = 2
-)
-
 type Container struct {
 	logger *slog.Logger
 
@@ -34,12 +25,12 @@ type Container struct {
 	Server presenter.Server
 }
 
-func NewContainer() *Container {
-	return &Container{}
+func NewContainer(logger *slog.Logger) *Container {
+	return &Container{logger: logger}
 }
 
 func (c *Container) InitStore() {
-	c.store = postgres.NewStorage()
+	c.store = postgres.NewStorage(c.logger)
 	c.store.MustConnect()
 }
 
@@ -56,16 +47,16 @@ func (c *Container) InitProductRepo() {
 }
 
 func (c *Container) InitAuthService() {
-	c.authService = usecase.NewAuthService(c.userRepo)
+	c.authService = usecase.NewAuthService(c.logger, c.userRepo)
 }
 
 func (c *Container) InitProductService() {
-	c.productService = usecase.NewProductService(c.productRepo)
+	c.productService = usecase.NewProductService(c.logger, c.productRepo)
 }
 
 func (c *Container) InitServer() {
-	router := gin.NewRouter(c.authService, c.productService)
-	c.Server = gin.NewServer(c.logger, router)
+	c.Server = gin.NewServer(c.logger)
+	c.Server.Register(c.authService, c.productService)
 }
 
 func (c *Container) Close() {

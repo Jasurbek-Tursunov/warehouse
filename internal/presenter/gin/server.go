@@ -15,14 +15,14 @@ type Server struct {
 	router  *libgin.Engine
 }
 
-func NewServer(logger *slog.Logger, router *libgin.Engine) *Server {
+func NewServer(logger *slog.Logger) *Server {
 	cfg := config.MustLoad[Config]()
 
 	return &Server{
 		Port:    cfg.Port,
 		Timeout: cfg.Timeout,
 		logger:  logger,
-		router:  router,
+		//router:  router,
 	}
 }
 
