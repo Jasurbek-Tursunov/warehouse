@@ -90,11 +90,22 @@ func (a *AuthServiceImpl) Login(data *dto.Auth) (string, error) {
 
 	user, err := a.userRepos.GetByUsername(data.Username)
 	if err != nil {
+		var errNotFound *entity.NotFoundError
+		if errors.As(err, &errNotFound) {
+			err = entity.WrapValidationError(entity.NewValidationError(
+				"username",
+				err.Error(),
+			))
+		}
 		return "", err
 	}
 
 	if !pass.AssertPassword(data.Password, user.Password) {
-		return "", errors.New("invalid password")
+		err = entity.WrapValidationError(entity.NewValidationError(
+			"password",
+			"invalid password",
+		))
+		return "", err
 	}
 
 	return jwt.Encode(user.ID, a.expireDuration, a.secretKey)

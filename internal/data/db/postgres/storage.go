@@ -37,6 +37,8 @@ func (s *Storage) MustConnect() {
 		s.logger.Error("Fail to migrate", "error", err.Error())
 		panic(err)
 	}
+
+	s.logger.Info("Storage started")
 }
 
 func (s *Storage) connect() error {
@@ -73,6 +75,7 @@ func (s *Storage) Close() {
 	if s.DB != nil {
 		s.DB.Close()
 	}
+	s.logger.Info("Storage connection closed!")
 }
 
 func (s *Storage) migrateUp() error {

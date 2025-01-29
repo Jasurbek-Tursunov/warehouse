@@ -1,11 +1,44 @@
-```env
-    export SERVER_PORT=8000
-    export SERVER_TIMEOUT=5s
-    
-    export DB_HOST=localhost
-    export DB_PORT=5454
-    export DB_USER=ejrtrjpidr_idrt
-    export DB_PASSWORD=sddeptf
-    export DB_NAME=warehouse_db
-    export DB_TIMEOUT=5s
+# Warehouse Management System
+
+## Описание
+
+**Warehouse Management System** – это система учета складских операций, разработанная для упрощения управления товарами, запасами и складскими процессами.
+
+## Запуск проекта
+
+Для запуска проекта выполните следующие команды:
+
+```sh
+# Клонирование репозитория
+git clone https://github.com/Jasurbek-Tursunov/warehouse.git
+
+# Переход в директорию проекта
+cd warehouse
+
+# Запуск контейнеров с помощью Docker Compose
+docker-compose -f deployment/docker-compose.yaml up
 ```
+
+## Документация API
+
+После успешного запуска проекта документация API будет доступна по следующему адресу:
+
+[Swagger UI](http://localhost:8001/swagger/index.html)
+
+## Возможные улучшения
+
+- Добавление **Redis** для кеширования данных и улучшения производительности системы.
+- Разбиение таблицы `products` на:
+    - `products` – основная информация о продукте.
+    - `product_type` – для разделения продуктов на типы или группы.
+    - `delta_price` – для отслеживания изменений цен по времени использования.
+
+## Требования
+
+- Docker
+- Docker Compose
+
+## Контакты
+
+Если у вас есть вопросы или предложения, обращайтесь к [автору проекта](https://jasurbek.buildbrain.uz/).
+

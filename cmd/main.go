@@ -21,17 +21,17 @@ import (
 // @description Type "Bearer" followed by a space and the JWT token.
 
 func main() {
-	// TODO Load Config
+	// Load Config
 	cfg := config.MustLoad[conf.Config]()
 
-	// TODO Setup Log
+	// Setup Log
 	logger := log.SetupLogger(cfg.Env)
 
-	// TODO Run server
+	// Run server
 	container := di.NewContainer(logger)
 	defer container.Close()
 
-	container.InitStore()
+	container.InitStore(1) // postgres
 	container.InitUserRepo()
 	container.InitAuthService()
 	container.InitProductRepo()
@@ -47,6 +47,6 @@ func main() {
 
 	<-stop
 
-	// TODO Stop server
+	// Stop server
 	container.Server.GracefulStop()
 }

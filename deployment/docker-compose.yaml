@@ -9,12 +9,15 @@ services:
     environment:
       ENV: prod
       SERVER_PORT: 8000
-      SERVER_TIMEOUT: 5
-      POSTGRES_HOST: db
-      POSTGRES_PORT: 5432
-      POSTGRES_DB: warehouse_db
-      POSTGRES_USER: ejrtrjpidr_idrt
-      POSTGRES_PASSWORD: sddeptf
+      SERVER_TIMEOUT: 5s
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: warehouse_db
+      DB_USER: ejrtrjpidr_idrt
+      DB_PASSWORD: sddeptf
+      DB_TIMEOUT: 5s
+    ports:
+      - 8001:8000
     command:
       - ./app
     depends_on:

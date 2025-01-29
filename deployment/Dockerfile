@@ -14,5 +14,6 @@ FROM debian:bookworm-slim
 WORKDIR /root
 
 COPY --from=builder app/build/app .
+COPY --from=builder app/migration /root/migration
 
 CMD ["./app"]

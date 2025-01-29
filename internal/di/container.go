@@ -30,9 +30,18 @@ func NewContainer(logger *slog.Logger) *Container {
 	return &Container{logger: logger}
 }
 
-func (c *Container) InitStore() {
-	c.store = postgres.NewStorage(c.logger)
-	c.store.MustConnect()
+func (c *Container) InitStore(storeType StorageType) {
+	switch storeType {
+	case StoragePostgres:
+		c.store = postgres.NewStorage(c.logger)
+		c.store.MustConnect()
+	case StorageMock:
+		// TODO
+	case StorageMySQL:
+		// TODO
+	default:
+		// nil
+	}
 }
 
 func (c *Container) InitUserRepo() {

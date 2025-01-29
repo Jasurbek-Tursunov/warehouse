@@ -19,7 +19,7 @@ func MustLoad[Config any]() *Config {
 	return mustLoadEnv[Config]()
 	//}
 
-	//return mustLoadPath[Config](configPath)
+	//return mustLoadPath[Config](configPath) // implementation for yaml, json and more with file
 }
 
 func mustLoadPath[Config any](configPath string) *Config {

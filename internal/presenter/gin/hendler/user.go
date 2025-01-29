@@ -39,9 +39,9 @@ func (a *AuthHandler) Register(c *gin.Context) {
 
 	user, err := a.service.Register(&data)
 	if err != nil {
-		var errValidation *entity.ValidationError
+		var errsValidation *entity.ValidationErrors
 		switch {
-		case errors.As(err, &errValidation):
+		case errors.As(err, &errsValidation):
 			c.JSON(http.StatusBadRequest, entity.Err{
 				Error:   http.StatusText(http.StatusBadRequest),
 				Message: err.Error(),
@@ -80,9 +80,9 @@ func (a *AuthHandler) Login(c *gin.Context) {
 
 	token, err := a.service.Login(&data)
 	if err != nil {
-		var errValidation *entity.ValidationError
+		var errsValidation *entity.ValidationErrors
 		switch {
-		case errors.As(err, &errValidation):
+		case errors.As(err, &errsValidation):
 			c.JSON(http.StatusBadRequest, entity.Err{
 				Error:   http.StatusText(http.StatusBadRequest),
 				Message: err.Error(),

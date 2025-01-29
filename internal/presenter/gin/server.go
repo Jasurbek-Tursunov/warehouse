@@ -27,13 +27,16 @@ func NewServer(logger *slog.Logger) *Server {
 }
 
 func (s *Server) MustRun() {
+
+	s.logger.Info("Server starting", "port", s.Port)
 	if err := s.Run(); err != nil {
+		s.logger.Error("failed run server", "error", err.Error())
 		panic(err)
 	}
 }
 
 func (s *Server) GracefulStop() {
-
+	s.logger.Info("Server graceful stopped")
 }
 
 func (s *Server) Run() error {
