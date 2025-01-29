@@ -1,9 +1,12 @@
 package usecase
 
-import "github.com/Jasurbek-Tursunov/warehouse/internal/domain/entity"
+import (
+	"github.com/Jasurbek-Tursunov/warehouse/internal/domain/entity"
+	"github.com/Jasurbek-Tursunov/warehouse/internal/domain/repository/dto"
+)
 
 type AuthService interface {
-	Register(username, password string) (*entity.User, error)
-	Login(username, password string) (string, error)
+	Register(*dto.CreateUser) (*entity.User, error)
+	Login(*dto.Auth) (string, error)
 	Check(token string) error
 }

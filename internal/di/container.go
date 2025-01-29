@@ -3,6 +3,7 @@ package di
 import (
 	"github.com/Jasurbek-Tursunov/warehouse/internal/data"
 	"github.com/Jasurbek-Tursunov/warehouse/internal/data/db/postgres"
+	repoPostgres "github.com/Jasurbek-Tursunov/warehouse/internal/data/db/postgres/repository"
 	"github.com/Jasurbek-Tursunov/warehouse/internal/domain/repository"
 	dusecase "github.com/Jasurbek-Tursunov/warehouse/internal/domain/usecase"
 	"github.com/Jasurbek-Tursunov/warehouse/internal/presenter"
@@ -36,13 +37,13 @@ func (c *Container) InitStore() {
 
 func (c *Container) InitUserRepo() {
 	if s, ok := c.store.(*postgres.Storage); ok {
-		c.userRepo = postgres.NewUserRepository(s)
+		c.userRepo = repoPostgres.NewUserRepository(s)
 	}
 }
 
 func (c *Container) InitProductRepo() {
 	if s, ok := c.store.(*postgres.Storage); ok {
-		c.productRepo = postgres.NewProductRepository(s)
+		c.productRepo = repoPostgres.NewProductRepository(s)
 	}
 }
 

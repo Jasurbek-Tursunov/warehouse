@@ -17,8 +17,8 @@ import (
 
 type Storage struct {
 	logger  *slog.Logger
-	conn    *sql.DB
-	timeout time.Duration
+	DB      *sql.DB
+	Timeout time.Duration
 }
 
 func NewStorage(logger *slog.Logger) *Storage {
@@ -56,29 +56,29 @@ func (s *Storage) connect() error {
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
-	s.conn = db
-	s.timeout = cfg.Timeout
+	s.DB = db
+	s.Timeout = cfg.Timeout
 
 	return nil
 }
 
 func (s *Storage) HealthCheck() {
-	if err := s.conn.Ping(); err != nil {
+	if err := s.DB.Ping(); err != nil {
 		s.logger.Error("Fail heath check postgres storage", "error", err.Error())
 		panic(err)
 	}
 }
 
 func (s *Storage) Close() {
-	if s.conn != nil {
-		s.conn.Close()
+	if s.DB != nil {
+		s.DB.Close()
 	}
 }
 
 func (s *Storage) migrateUp() error {
 	const op = "postgres.storage.MigrateUp"
 
-	driver, err := pg.WithInstance(s.conn, &pg.Config{})
+	driver, err := pg.WithInstance(s.DB, &pg.Config{})
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}

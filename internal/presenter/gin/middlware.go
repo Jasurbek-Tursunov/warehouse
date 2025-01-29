@@ -3,8 +3,10 @@ package gin
 import (
 	"github.com/Jasurbek-Tursunov/warehouse/internal/domain/usecase"
 	"github.com/gin-gonic/gin"
+	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type Middleware struct {
@@ -36,5 +38,21 @@ func (m *Middleware) Auth(c *gin.Context) {
 	if err := m.service.Check(headerParts[1]); err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
+	}
+}
+
+func (m *Middleware) SlogLogger(logger *slog.Logger) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		start := time.Now()
+
+		c.Next()
+
+		logger.Info("HTTP Request",
+			slog.String("method", c.Request.Method),
+			slog.String("path", c.Request.URL.Path),
+			slog.Int("status", c.Writer.Status()),
+			slog.Duration("latency", time.Since(start)),
+			slog.String("client_ip", c.ClientIP()),
+		)
 	}
 }

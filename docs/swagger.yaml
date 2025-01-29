@@ -1,0 +1,335 @@
+basePath: /
+definitions:
+  dto.Auth:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  dto.CreateProduct:
+    properties:
+      name:
+        type: string
+      price:
+        type: number
+      quantity:
+        type: integer
+    required:
+    - name
+    - price
+    - quantity
+    type: object
+  dto.CreateUser:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  dto.UpdateProduct:
+    properties:
+      name:
+        type: string
+      price:
+        type: number
+      quantity:
+        type: integer
+    required:
+    - name
+    - price
+    - quantity
+    type: object
+  entity.Err:
+    properties:
+      error:
+        type: string
+      message:
+        type: string
+    type: object
+  entity.Product:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      price:
+        type: number
+      quantity:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  entity.Token:
+    properties:
+      token:
+        type: string
+    type: object
+  entity.User:
+    properties:
+      id:
+        type: integer
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+info:
+  contact: {}
+  title: Warehouse API
+  version: "1.0"
+paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: login (get auth token)
+      parameters:
+      - description: Auth struct
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/dto.Auth'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Token'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entity.Err'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entity.Err'
+      summary: Login
+      tags:
+      - auth
+  /product/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete product data
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/entity.Err'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entity.Err'
+      security:
+      - Bearer: []
+      summary: Delete
+      tags:
+      - product
+    get:
+      consumes:
+      - application/json
+      description: get product data
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Product'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/entity.Err'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entity.Err'
+      security:
+      - Bearer: []
+      summary: Get
+      tags:
+      - product
+    put:
+      consumes:
+      - application/json
+      description: update product data
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Product struct
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateProduct'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Product'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entity.Err'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/entity.Err'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entity.Err'
+      security:
+      - Bearer: []
+      summary: Update
+      tags:
+      - product
+  /product/add:
+    post:
+      consumes:
+      - application/json
+      description: create product
+      parameters:
+      - description: Product struct
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateProduct'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Product'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entity.Err'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/entity.Err'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entity.Err'
+      security:
+      - Bearer: []
+      summary: Create
+      tags:
+      - product
+  /products:
+    get:
+      consumes:
+      - application/json
+      description: list products data
+      parameters:
+      - description: Search by product name
+        in: query
+        name: name
+        type: string
+      - description: Sort field
+        in: query
+        name: sort_by
+        type: string
+      - description: Limit for paginate
+        in: query
+        name: limit
+        type: integer
+      - description: Page for paginate
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.Product'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entity.Err'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entity.Err'
+      security:
+      - Bearer: []
+      summary: List
+      tags:
+      - product
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: registrantion
+      parameters:
+      - description: User struct
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entity.Err'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entity.Err'
+      summary: Register
+      tags:
+      - auth
+securityDefinitions:
+  Bearer:
+    description: Type "Bearer" followed by a space and the JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

@@ -6,10 +6,9 @@ import (
 	"github.com/Jasurbek-Tursunov/warehouse/internal/domain/entity"
 	"github.com/Jasurbek-Tursunov/warehouse/internal/domain/repository"
 	"github.com/Jasurbek-Tursunov/warehouse/internal/domain/repository/dto"
-	"github.com/golang-jwt/jwt/v5"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/Jasurbek-Tursunov/warehouse/pkg/jwt"
+	pass "github.com/Jasurbek-Tursunov/warehouse/pkg/password"
 	"log/slog"
-	"strconv"
 	"time"
 )
 
@@ -30,19 +29,35 @@ func NewAuthService(logger *slog.Logger, userRepos repository.UserRepository) *A
 	}
 }
 
-func (a *AuthServiceImpl) Register(username, password string) (*entity.User, error) {
-	hashedPassword, err := hashingPassword(password)
+func (a *AuthServiceImpl) Register(data *dto.CreateUser) (*entity.User, error) {
+	// Validation
+	var validationErrors []*entity.ValidationError
+	if data.Username == "" {
+		validationErrors = append(validationErrors, entity.NewValidationError(
+			"username",
+			"username cannot be empty",
+		))
+	}
+
+	if data.Password == "" {
+		validationErrors = append(validationErrors, entity.NewValidationError(
+			"password",
+			"password cannot be empty",
+		))
+	}
+
+	if len(validationErrors) > 0 {
+		return nil, entity.WrapValidationError(validationErrors...)
+	}
+
+	hashedPassword, err := pass.HashingPassword(data.Password)
 	if err != nil {
 
 		return nil, err
 	}
+	data.Password = hashedPassword
 
-	user, err := a.userRepos.Create(
-		&dto.CreateUser{
-			Username: username,
-			Password: hashedPassword,
-		},
-	)
+	user, err := a.userRepos.Create(data)
 	if err != nil {
 		return nil, err
 	}
@@ -50,26 +65,41 @@ func (a *AuthServiceImpl) Register(username, password string) (*entity.User, err
 	return user, nil
 }
 
-func (a *AuthServiceImpl) Login(username, password string) (string, error) {
-	user, err := a.userRepos.GetByUsername(username)
+func (a *AuthServiceImpl) Login(data *dto.Auth) (string, error) {
+	// Validation
+	var validationErrors []*entity.ValidationError
+	if data.Username == "" {
+		validationErrors = append(validationErrors, entity.NewValidationError(
+			"username",
+			"username cannot be empty",
+		))
+	}
+
+	if data.Password == "" {
+		validationErrors = append(validationErrors, entity.NewValidationError(
+			"password",
+			"password cannot be empty",
+		))
+	}
+
+	if len(validationErrors) > 0 {
+		return "", entity.WrapValidationError(validationErrors...)
+	}
+
+	user, err := a.userRepos.GetByUsername(data.Username)
 	if err != nil {
 		return "", fmt.Errorf("user with this username not found: %w", err)
 	}
 
-	hashedPassword, err := hashingPassword(password)
-	if err != nil {
-		return "", err
-	}
-
-	if assertPassword(user.Password, hashedPassword) {
+	if !pass.AssertPassword(data.Password, user.Password) {
 		return "", errors.New("invalid password")
 	}
 
-	return encode(user.ID, a.expireDuration, a.secretKey)
+	return jwt.Encode(user.ID, a.expireDuration, a.secretKey)
 }
 
 func (a *AuthServiceImpl) Check(token string) error {
-	id, err := decode(token, a.secretKey)
+	id, err := jwt.Decode(token, a.secretKey)
 	if err != nil {
 		a.logger.Debug("failed decode token", "error", err.Error())
 		return err
@@ -81,44 +111,4 @@ func (a *AuthServiceImpl) Check(token string) error {
 		return err
 	}
 	return nil
-}
-
-func hashingPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
-}
-
-func assertPassword(password, hashPassword string) bool {
-	return bcrypt.CompareHashAndPassword([]byte(hashPassword), []byte(password)) == nil
-}
-
-func encode(id int, expireDuration time.Duration, secretKey string) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &jwt.RegisteredClaims{
-		ID:        strconv.Itoa(id),
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(expireDuration)),
-		IssuedAt:  jwt.NewNumericDate(time.Now()),
-	})
-	return token.SignedString([]byte(secretKey))
-}
-
-func decode(accessToken, secretKey string) (int, error) {
-	token, err := jwt.ParseWithClaims(accessToken, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-		return []byte(secretKey), nil
-	})
-
-	if err != nil {
-		return 0, err
-	}
-
-	if claims, ok := token.Claims.(*jwt.RegisteredClaims); ok && token.Valid {
-		return strconv.Atoi(claims.ID)
-	}
-
-	return 0, errors.New("invalid token")
 }

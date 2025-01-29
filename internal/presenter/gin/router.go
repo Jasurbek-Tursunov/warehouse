@@ -3,7 +3,13 @@ package gin
 import (
 	"github.com/Jasurbek-Tursunov/warehouse/internal/domain/usecase"
 	"github.com/Jasurbek-Tursunov/warehouse/internal/presenter/gin/hendler"
-	libgin "github.com/gin-gonic/gin"
+	swaggerfiles "github.com/swaggo/files"
+	swagger "github.com/swaggo/gin-swagger"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+
+	_ "github.com/Jasurbek-Tursunov/warehouse/docs"
 )
 
 func (s *Server) Register(authService usecase.AuthService, productService usecase.ProductService) {
@@ -12,19 +18,17 @@ func (s *Server) Register(authService usecase.AuthService, productService usecas
 	auth := hendler.NewAuthHandler(authService)
 	product := hendler.NewProductHandler(productService)
 
-	s.router = libgin.Default()
+	s.router = gin.Default()
 	authorized := s.router.Group("/").Use(middleware.Auth)
 
-	s.router.GET("/ping", func(c *libgin.Context) {
-		c.JSON(200, libgin.H{"client": c.ClientIP(), "server": c.Request.Host})
-	})
-
+	s.router.GET("/ping", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"pong": true}) })
+	s.router.GET("/swagger/*any", swagger.WrapHandler(swaggerfiles.Handler))
 	s.router.POST("/register", auth.Register)
 	s.router.POST("/login", auth.Login)
 
 	authorized.GET("/products", product.List)
-	authorized.POST("/products", product.Create)
-	authorized.GET("/products/:id", product.Get)
-	authorized.PUT("/products/:id", product.Update)
-	authorized.DELETE("/products/:id", product.Delete)
+	authorized.POST("/product/add", product.Create)
+	authorized.GET("/product/:id", product.Get)
+	authorized.PUT("/product/:id", product.Update)
+	authorized.DELETE("/product/:id", product.Delete)
 }

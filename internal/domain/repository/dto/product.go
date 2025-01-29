@@ -13,4 +13,6 @@ type UpdateProduct struct {
 }
 
 type ProductQuery struct {
+	Name   string
+	SortBy string
 }

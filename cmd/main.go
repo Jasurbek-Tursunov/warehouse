@@ -8,6 +8,16 @@ import (
 	"syscall"
 )
 
+// @title Warehouse API
+// @version 1.0
+
+// @BasePath /
+
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and the JWT token.
+
 func main() {
 	// TODO Load Config
 
