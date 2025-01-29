@@ -42,7 +42,11 @@ func (p *ProductServiceImpl) Create(product *dto.CreateProduct) (*entity.Product
 		))
 	}
 	if len(validationErrors) > 0 {
-		return nil, entity.WrapValidationError(validationErrors...)
+		err := entity.WrapValidationError(validationErrors...)
+		if err != nil {
+			p.logger.Debug("failed to validate", "error", err.Error())
+			return nil, err
+		}
 	}
 	return p.productRepo.Create(product)
 }
@@ -69,7 +73,11 @@ func (p *ProductServiceImpl) Update(id int, product *dto.UpdateProduct) (*entity
 		))
 	}
 	if len(validationErrors) > 0 {
-		return nil, entity.WrapValidationError(validationErrors...)
+		err := entity.WrapValidationError(validationErrors...)
+		if err != nil {
+			p.logger.Debug("failed to validate", "error", err.Error())
+			return nil, err
+		}
 	}
 
 	return p.productRepo.Update(id, product)

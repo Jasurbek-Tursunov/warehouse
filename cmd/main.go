@@ -1,8 +1,10 @@
 package main
 
 import (
+	conf "github.com/Jasurbek-Tursunov/warehouse/internal/config"
 	"github.com/Jasurbek-Tursunov/warehouse/internal/di"
-	"log/slog"
+	"github.com/Jasurbek-Tursunov/warehouse/pkg/config"
+	"github.com/Jasurbek-Tursunov/warehouse/pkg/log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -20,10 +22,10 @@ import (
 
 func main() {
 	// TODO Load Config
+	cfg := config.MustLoad[conf.Config]()
 
 	// TODO Setup Log
-
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	logger := log.SetupLogger(cfg.Env)
 
 	// TODO Run server
 	container := di.NewContainer(logger)

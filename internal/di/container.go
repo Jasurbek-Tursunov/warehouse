@@ -37,13 +37,13 @@ func (c *Container) InitStore() {
 
 func (c *Container) InitUserRepo() {
 	if s, ok := c.store.(*postgres.Storage); ok {
-		c.userRepo = repoPostgres.NewUserRepository(s)
+		c.userRepo = repoPostgres.NewUserRepository(c.logger, s)
 	}
 }
 
 func (c *Container) InitProductRepo() {
 	if s, ok := c.store.(*postgres.Storage); ok {
-		c.productRepo = repoPostgres.NewProductRepository(s)
+		c.productRepo = repoPostgres.NewProductRepository(c.logger, s)
 	}
 }
 

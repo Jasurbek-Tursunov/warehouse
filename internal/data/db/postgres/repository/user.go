@@ -8,17 +8,21 @@ import (
 	"github.com/Jasurbek-Tursunov/warehouse/internal/domain/entity"
 	"github.com/Jasurbek-Tursunov/warehouse/internal/domain/repository/dto"
 	"github.com/lib/pq"
+	"log/slog"
 )
 
 type UserRepositoryImpl struct {
-	store *postgres.Storage
+	logger *slog.Logger
+	store  *postgres.Storage
 }
 
-func NewUserRepository(store *postgres.Storage) *UserRepositoryImpl {
-	return &UserRepositoryImpl{store: store}
+func NewUserRepository(logger *slog.Logger, store *postgres.Storage) *UserRepositoryImpl {
+	return &UserRepositoryImpl{logger, store}
 }
 
 func (u *UserRepositoryImpl) Create(user *dto.CreateUser) (*entity.User, error) {
+	const op = "postgres.repository.user.Create"
+
 	ctx, cancel := context.WithTimeout(context.Background(), u.store.Timeout)
 	defer cancel()
 
@@ -32,19 +36,23 @@ func (u *UserRepositoryImpl) Create(user *dto.CreateUser) (*entity.User, error) 
 		var errPQ *pq.Error
 		switch {
 		case errors.As(err, &errPQ) && errPQ.Code == "23505":
-			return nil, entity.NewValidationError(
+			err = entity.WrapValidationError(entity.NewValidationError(
 				"username",
 				"User with username: "+user.Username+" already exist",
-			)
+			))
+			u.logger.Debug(op+"failed validation", "error", err.Error())
 		default:
-			return nil, err
+			u.logger.Warn(op+"failed executing", "error", err.Error())
 		}
+		return nil, err
 	}
 
 	return &out, nil
 }
 
 func (u *UserRepositoryImpl) Get(id int) (*entity.User, error) {
+	const op = "postgres.repository.user.Get"
+
 	ctx, cancel := context.WithTimeout(context.Background(), u.store.Timeout)
 	defer cancel()
 
@@ -59,8 +67,11 @@ func (u *UserRepositoryImpl) Get(id int) (*entity.User, error) {
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, entity.NewNotFoundError("user", id)
+			err = entity.NewNotFoundError("user", id)
+			u.logger.Debug(op+" failed not found", "error", err.Error())
+			return nil, err
 		}
+		u.logger.Warn(op+" failed executing", "error", err.Error())
 		return nil, err
 	}
 
@@ -68,6 +79,8 @@ func (u *UserRepositoryImpl) Get(id int) (*entity.User, error) {
 }
 
 func (u *UserRepositoryImpl) GetByUsername(username string) (*entity.User, error) {
+	const op = "postgres.repository.user.GetByUsername"
+
 	ctx, cancel := context.WithTimeout(context.Background(), u.store.Timeout)
 	defer cancel()
 
@@ -80,8 +93,11 @@ func (u *UserRepositoryImpl) GetByUsername(username string) (*entity.User, error
 	err := u.store.DB.QueryRowContext(ctx, query, username).Scan(&out.ID, &out.Password)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, entity.NewNotFoundError("user", username)
+			err = entity.NewNotFoundError("user", username)
+			u.logger.Debug(op+" failed not found", "error", err.Error())
+			return nil, err
 		}
+		u.logger.Warn(op+" failed executing", "error", err.Error())
 		return nil, err
 	}
 

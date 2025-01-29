@@ -8,18 +8,22 @@ import (
 	"github.com/Jasurbek-Tursunov/warehouse/internal/data/db/postgres"
 	"github.com/Jasurbek-Tursunov/warehouse/internal/domain/entity"
 	"github.com/Jasurbek-Tursunov/warehouse/internal/domain/repository/dto"
+	"log/slog"
 	"time"
 )
 
 type ProductRepositoryImpl struct {
-	store *postgres.Storage
+	logger *slog.Logger
+	store  *postgres.Storage
 }
 
-func NewProductRepository(store *postgres.Storage) *ProductRepositoryImpl {
-	return &ProductRepositoryImpl{store: store}
+func NewProductRepository(logger *slog.Logger, store *postgres.Storage) *ProductRepositoryImpl {
+	return &ProductRepositoryImpl{logger, store}
 }
 
 func (p *ProductRepositoryImpl) List(filters *dto.ProductQuery, paginate *dto.Paginator) ([]entity.Product, error) {
+	const op = "postgres.repository.product.List"
+
 	ctx, cancel := context.WithTimeout(context.Background(), p.store.Timeout)
 	defer cancel()
 
@@ -44,6 +48,7 @@ func (p *ProductRepositoryImpl) List(filters *dto.ProductQuery, paginate *dto.Pa
 
 	rows, err := p.store.DB.QueryContext(ctx, query, args...)
 	if err != nil {
+		p.logger.Warn(op+" failed executing query", "error", err.Error())
 		return []entity.Product{}, err
 	}
 
@@ -60,6 +65,7 @@ func (p *ProductRepositoryImpl) List(filters *dto.ProductQuery, paginate *dto.Pa
 		)
 
 		if err != nil {
+			p.logger.Warn(op+" failed parse rows", "error", err.Error())
 			continue
 		}
 
@@ -69,6 +75,8 @@ func (p *ProductRepositoryImpl) List(filters *dto.ProductQuery, paginate *dto.Pa
 }
 
 func (p *ProductRepositoryImpl) Create(product *dto.CreateProduct) (*entity.Product, error) {
+	const op = "postgres.repository.product.Create"
+
 	ctx, cancel := context.WithTimeout(context.Background(), p.store.Timeout)
 	defer cancel()
 
@@ -83,6 +91,7 @@ func (p *ProductRepositoryImpl) Create(product *dto.CreateProduct) (*entity.Prod
 	err := p.store.DB.QueryRowContext(ctx, query, product.Name, product.Price, product.Quantity).
 		Scan(&out.ID, &out.CreatedAt, &out.UpdatedAt)
 	if err != nil {
+		p.logger.Warn(op+" failed parse rows", "error", err.Error())
 		return nil, err
 	}
 
@@ -90,6 +99,8 @@ func (p *ProductRepositoryImpl) Create(product *dto.CreateProduct) (*entity.Prod
 }
 
 func (p *ProductRepositoryImpl) Update(id int, product *dto.UpdateProduct) (*entity.Product, error) {
+	const op = "postgres.repository.product.Update"
+
 	ctx, cancel := context.WithTimeout(context.Background(), p.store.Timeout)
 	defer cancel()
 
@@ -107,16 +118,20 @@ func (p *ProductRepositoryImpl) Update(id int, product *dto.UpdateProduct) (*ent
 	if err := row.Scan(&out.CreatedAt, &out.UpdatedAt); err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return nil, entity.NewNotFoundError("product", id)
+			err = entity.NewNotFoundError("product", id)
+			p.logger.Debug(op+" failed not found", "error", err.Error())
 		default:
-			return nil, err
+			p.logger.Warn(op+" failed parse rows", "error", err.Error())
 		}
+		return nil, err
 	}
 
 	return &out, nil
 }
 
 func (p *ProductRepositoryImpl) Get(id int) (*entity.Product, error) {
+	const op = "postgres.repository.product.Get"
+
 	ctx, cancel := context.WithTimeout(context.Background(), p.store.Timeout)
 	defer cancel()
 
@@ -136,32 +151,40 @@ func (p *ProductRepositoryImpl) Get(id int) (*entity.Product, error) {
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return nil, entity.NewNotFoundError("product", id)
+			err = entity.NewNotFoundError("product", id)
+			p.logger.Debug(op+" failed not found", "error", err.Error())
 		default:
-			return nil, err
+			p.logger.Warn(op+" failed parse rows", "error", err.Error())
 		}
+		return nil, err
 	}
 
 	return &out, nil
 }
 
 func (p *ProductRepositoryImpl) Delete(id int) error {
+	const op = "postgres.repository.product.Delete"
+
 	ctx, cancel := context.WithTimeout(context.Background(), p.store.Timeout)
 	defer cancel()
 
 	query := `DELETE FROM products WHERE id = $1`
 	result, err := p.store.DB.ExecContext(ctx, query, id)
 	if err != nil {
+		p.logger.Warn(op+" failed to executing", "error", err.Error())
 		return err
 	}
 
 	rowsCount, err := result.RowsAffected()
 	if err != nil {
+		p.logger.Warn(op+" failed parse rows", "error", err.Error())
 		return err
 	}
 
 	if rowsCount == 0 {
-		return entity.NewNotFoundError("product", id)
+		err = entity.NewNotFoundError("product", id)
+		p.logger.Debug(op+" failed not found", "error", err.Error())
+		return err
 	}
 
 	return nil

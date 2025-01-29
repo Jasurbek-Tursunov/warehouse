@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"errors"
-	"fmt"
 	"github.com/Jasurbek-Tursunov/warehouse/internal/domain/entity"
 	"github.com/Jasurbek-Tursunov/warehouse/internal/domain/repository"
 	"github.com/Jasurbek-Tursunov/warehouse/internal/domain/repository/dto"
@@ -47,7 +46,11 @@ func (a *AuthServiceImpl) Register(data *dto.CreateUser) (*entity.User, error) {
 	}
 
 	if len(validationErrors) > 0 {
-		return nil, entity.WrapValidationError(validationErrors...)
+		err := entity.WrapValidationError(validationErrors...)
+		if err != nil {
+			a.logger.Debug("failed to validate", "error", err.Error())
+			return nil, err
+		}
 	}
 
 	hashedPassword, err := pass.HashingPassword(data.Password)
@@ -57,12 +60,7 @@ func (a *AuthServiceImpl) Register(data *dto.CreateUser) (*entity.User, error) {
 	}
 	data.Password = hashedPassword
 
-	user, err := a.userRepos.Create(data)
-	if err != nil {
-		return nil, err
-	}
-
-	return user, nil
+	return a.userRepos.Create(data)
 }
 
 func (a *AuthServiceImpl) Login(data *dto.Auth) (string, error) {
@@ -83,12 +81,16 @@ func (a *AuthServiceImpl) Login(data *dto.Auth) (string, error) {
 	}
 
 	if len(validationErrors) > 0 {
-		return "", entity.WrapValidationError(validationErrors...)
+		err := entity.WrapValidationError(validationErrors...)
+		if err != nil {
+			a.logger.Debug("failed to validate", "error", err.Error())
+			return "", err
+		}
 	}
 
 	user, err := a.userRepos.GetByUsername(data.Username)
 	if err != nil {
-		return "", fmt.Errorf("user with this username not found: %w", err)
+		return "", err
 	}
 
 	if !pass.AssertPassword(data.Password, user.Password) {

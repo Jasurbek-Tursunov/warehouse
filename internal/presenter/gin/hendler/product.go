@@ -86,9 +86,9 @@ func (p *ProductHandler) Create(c *gin.Context) {
 
 	product, err := p.service.Create(&data)
 	if err != nil {
-		var errValidation *entity.ValidationError
+		var errsValidation *entity.ValidationErrors
 		switch {
-		case errors.As(err, &errValidation):
+		case errors.As(err, &errsValidation):
 			c.JSON(http.StatusBadRequest, entity.Err{
 				Error:   http.StatusText(http.StatusBadRequest),
 				Message: err.Error(),
@@ -182,14 +182,14 @@ func (p *ProductHandler) Update(c *gin.Context) {
 	product, err := p.service.Update(id, &data)
 	if err != nil {
 		var errNotFound *entity.NotFoundError
-		var errValidation *entity.ValidationError
+		var errsValidation *entity.ValidationErrors
 		switch {
 		case errors.As(err, &errNotFound):
 			c.JSON(http.StatusNotFound, entity.Err{
 				Error:   http.StatusText(http.StatusNotFound),
 				Message: err.Error(),
 			})
-		case errors.As(err, &errValidation):
+		case errors.As(err, &errsValidation):
 			c.JSON(http.StatusBadRequest, entity.Err{
 				Error:   http.StatusText(http.StatusBadRequest),
 				Message: err.Error(),

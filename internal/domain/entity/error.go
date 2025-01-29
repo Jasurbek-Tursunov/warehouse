@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 )
@@ -32,12 +31,20 @@ func (v *ValidationError) Error() string {
 	return fmt.Sprintf("validation error: field '%s' - %s", v.Field, v.Message)
 }
 
-func WrapValidationError(errs ...*ValidationError) error {
+type ValidationErrors struct {
+	Errors []*ValidationError
+}
+
+func WrapValidationError(errors ...*ValidationError) *ValidationErrors {
+	return &ValidationErrors{Errors: errors}
+}
+
+func (v *ValidationErrors) Error() string {
 	var errMessages []string
-	for _, err := range errs {
+	for _, err := range v.Errors {
 		errMessages = append(errMessages, err.Error())
 	}
-	return errors.New("validation errors: " + strings.Join(errMessages, "; "))
+	return "validation errors: " + strings.Join(errMessages, "; ")
 }
 
 type Err struct {
