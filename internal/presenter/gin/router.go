@@ -18,7 +18,8 @@ func (s *Server) Register(authService usecase.AuthService, productService usecas
 	auth := hendler.NewAuthHandler(authService)
 	product := hendler.NewProductHandler(productService)
 
-	s.router = gin.Default()
+	s.router = gin.New()
+	s.router.Use(middleware.SlogLogger(s.logger))
 	authorized := s.router.Group("/").Use(middleware.Auth)
 
 	s.router.GET("/ping", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"pong": true}) })
